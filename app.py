@@ -594,7 +594,16 @@ with tabs[1]:
     st.session_state['ESTADO_PORTAL_RENOVACION_CAA'] = st.text_input("Estado de renovación del CAA en el portal:", "N/A", disabled=renovacion_caa_disabled, key="renovacion_caa_ESTADO_PORTAL")
     st.session_state['DISPO_RENOVACION_CAA'] = st.text_input("Disposición Renovación CAA:", "N/A", disabled=renovacion_caa_disabled, key="renovacion_caa_DISPO")
     st.session_state['OBSERVACIONES_CAA'] = st.text_area("Observaciones extra CAAP/CAAF:", "", key="caap_caaf_OBSERVACIONES")
-
+st.subheader("📜 Último CAA Obtenido (Vigente o Anterior)")
+    col_u1, col_u2 = st.columns(2)
+    with col_u1:
+        st.session_state['ULTIMO_CAA_DISPO'] = st.text_input("Disposición Último CAA:", "N/A", key="u_caa_DISPO")
+        st.session_state['ULTIMO_CAA_EXP'] = st.text_input("Expediente Último CAA:", "N/A", key="u_caa_EXP")
+    with col_u2:
+        st.session_state['ULTIMO_CAA_FECHA'] = st.text_input("Fecha de Emisión:", "dd/mm/aaaa", key="u_caa_FECHA")
+        st.session_state['ULTIMO_CAA_VTO'] = st.text_input("Fecha de Vencimiento:", "dd/mm/aaaa", key="u_caa_VTO")
+    
+    st.divider()
 
 # --- 3. LEGA y Monitoreos Ambientales ---
 with tabs[2]:
