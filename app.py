@@ -481,41 +481,7 @@ def insertar_tabla_manual_dinamica(doc, lista_de_filas_datos):
                             for run in para.runs:
                                 run.font.size = Pt(10)
             break
-# 1. El Selector (debe estar fuera del formulario o usar st.session_state)
-opciones = HALLAZGOS_PREDEFINIDOS.get('Ambiental', [])
 
-seleccion = st.selectbox(
-    "Seleccione un hallazgo predefinido:",
-    options=[None] + opciones,
-    format_func=lambda x: x['observacion'] if x else "Escribir manualmente..."
-)
-
-# 2. Los campos de texto con el "value" vinculado a la selección
-with st.form("form_hallazgos"):
-    # Si 'seleccion' tiene datos, los extraemos; si es None, usamos texto vacío
-    obs_default = seleccion['observacion'] if seleccion else ""
-    sit_default = seleccion['situacion'] if seleccion else ""
-    aut_default = seleccion['autoridad'] if seleccion else ""
-    rie_default = seleccion['riesgo'] if seleccion else ""
-    rec_default = seleccion['recomendacion'] if seleccion else ""
-
-    # IMPORTANTE: El parámetro 'value' es lo que hace que se "autocomplete"
-    f_obs = st.text_area("Observación:", value=obs_default)
-    f_sit = st.text_area("Situación:", value=sit_default)
-    f_aut = st.text_input("Autoridad:", value=aut_default)
-    f_rie = st.text_area("Riesgo:", value=rie_default)
-    f_rec = st.text_area("Recomendación:", value=rec_default)
-
-    btn_guardar = st.form_submit_button("Aceptar Hallazgo")
-
-# 3. La llamada a tu función (la que me pasaste)
-if btn_guardar:
-    if f_obs:
-        # Aquí es donde se usa tu función técnica para escribir en el objeto 'doc'
-        agregar_hallazgo_formateado_al_doc(
-            doc, 1, f_obs, f_sit, f_aut, f_rie, f_rec
-        )
-        st.success("Hallazgo cargado al documento.")
 # ==========================================
 # 4. STREAMLIT APP LAYOUT AND LOGIC
 # ==========================================
@@ -526,12 +492,6 @@ st.title("📝 Generador de Informes Ambientales")
 # Initialize session state variables
 if 'uploaded_file' not in st.session_state:
     st.session_state['uploaded_file'] = None
-
-if 'hallazgos_widgets_list' not in st.session_state:
-    # Initial empty finding dictionary structure
-    st.session_state['hallazgos_widgets_list'] = [{
-        'observacion': '', 'situacion': '', 'autoridad': '', 'riesgo': '', 'recomendacion': ''
-    }]
 
 if 'muestreo_filas_datos' not in st.session_state:
     # Initial empty monitoring row dictionary structure
