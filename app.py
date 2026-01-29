@@ -595,16 +595,6 @@ with tabs[1]:
     st.session_state['DISPO_RENOVACION_CAA'] = st.text_input("Disposición Renovación CAA:", "N/A", disabled=renovacion_caa_disabled, key="renovacion_caa_DISPO")
     st.session_state['OBSERVACIONES_CAA'] = st.text_area("Observaciones extra CAAP/CAAF:", "", key="caap_caaf_OBSERVACIONES")
 
-
-st.header("🔄 Renovación CAA") # <--- 4 espacios
-    st.session_state['RENOVACION_CAA_STATUS'] = st.selectbox(...) # <--- 4 espacios
-
-    # Asegúrate de que estas líneas estén alineadas perfectamente:
-    st.subheader("📜 Último CAA Obtenido") # <--- 4 espacios
-    col_u1, col_u2 = st.columns(2)         # <--- 4 espacios (AQUÍ ESTABA EL ERROR)
-    with col_u1:                           # <--- 4 espacios
-        st.session_state['ULTIMO_CAA_DISPO'] = st.text_input(...) # <--- 8 espacios
-        
     st.divider()
 
 # --- 3. LEGA y Monitoreos Ambientales ---
