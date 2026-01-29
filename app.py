@@ -727,87 +727,90 @@ with tabs[5]:
 with tabs[6]:
     st.header("🔍 Hallazgos de Campo")
 
-    # Función para aplicar el preset
-    def apply_preset_callback(idx):
-        # Recuperamos el valor seleccionado del dropdown
-        selected_val = st.session_state[f"hallazgo_preset_{idx}"]
+    # Función mejorada para aplicar el preset
+    def aplicar_preset_hallazgo(idx):
+        clave_preset = f"hallazgo_preset_{idx}"
+        seleccion = st.session_state.get(clave_preset)
         
-        if selected_val != "Autocompletar (Seleccione)...":
-            # Extraemos categoría y observación base usando regex
-            match = re.match(r'\[(.*?)\]\s*(.*)', selected_val)
-            if match:
-                category = match.group(1)
-                obs_text = match.group(2)
+        if seleccion and seleccion != "Autocompletar (Seleccione)...":
+            # Extraemos los datos del diccionario global
+            for cat, items in HALLAZGOS_PREDEFINIDOS.items():
+                for item in items:
+                    # Buscamos coincidencia
+                    if item['observacion'] in seleccion:
+                        # ACTUALIZAMOS EL ESTADO DE SESIÓN
+                        st.session_state['hallazgos_widgets_list'][idx].update({
+                            'observacion': item['observacion'],
+                            'situacion': item['situacion'],
+                            'autoridad': item['autoridad'],
+                            'riesgo': item['riesgo'],
+                            'recomendacion': item['recomendacion']
+                        })
+                        return # Salimos de la función una vez encontrado
 
-                # Buscamos el objeto completo en nuestra base de datos
-                if category in HALLAZGOS_PREDEFINIDOS:
-                    for item in HALLAZGOS_PREDEFINIDOS[category]:
-                        # Comparamos el inicio para encontrar el match
-                        if item['observacion'].startswith(obs_text):
-                            # Actualizamos el session_state directamente
-                            st.session_state['hallazgos_widgets_list'][idx].update({
-                                'observacion': item['observacion'],
-                                'situacion': item['situacion'],
-                                'autoridad': item['autoridad'],
-                                'riesgo': item['riesgo'],
-                                'recomendacion': item['recomendacion']
-                            })
-                            break
-
-    # Mostrar hallazgos existentes
-    # Usamos una copia de la lista para evitar errores de índice al eliminar
+    # Dibujamos los hallazgos
     for i in range(len(st.session_state['hallazgos_widgets_list'])):
         finding = st.session_state['hallazgos_widgets_list'][i]
         
-        exp_title = f"Observación # {i+1}"
-        if finding['observacion']:
-            exp_title += f": {finding['observacion'][:50]}..."
+        with st.expander(f"📌 Hallazgo # {i+1}: {finding['observacion'][:40]}...", expanded=True):
+            
+            # 1. El Selector (Preset)
+            opciones_preset = ["Autocompletar (Seleccione)..."]
+            for cat, lista in HALLAZGOS_PREDEFINIDOS.items():
+                for h in lista:
+                    opciones_preset.append(f"[{cat}] {h['observacion'][:80]}")
 
-        with st.expander(exp_title, expanded=True):
-            # Preparar opciones del dropdown
-            opts = ["Autocompletar (Seleccione)..."]
-            for cat, items in HALLAZGOS_PREDEFINIDOS.items():
-                for item in items:
-                    opts.append(f"[{cat}] {item['observacion'][:80]}")
-
-            # Selector de autocompletado
             st.selectbox(
                 "Seleccionar un modelo predefinido:",
-                options=opts,
+                options=opciones_preset,
                 key=f"hallazgo_preset_{i}",
-                on_change=apply_preset_callback,
+                on_change=aplicar_preset_hallazgo, # <--- LA MAGIA ESTÁ AQUÍ
                 args=(i,)
             )
 
-            st.markdown("---")
+            st.divider()
 
-            # Campos de edición: Usamos el session_state como fuente de verdad
-            # IMPORTANTE: No asignes el valor del text_area al session_state en la misma línea
-            # Streamlit lo maneja mejor así:
+            # 2. Los campos de texto (USAMOS VALUE DIRECTO DEL SESSION STATE)
+            # Nota: Agregamos el on_change para que si el usuario escribe a mano, se guarde también
             st.session_state['hallazgos_widgets_list'][i]['observacion'] = st.text_area(
-                "Observación:", value=finding['observacion'], key=f"h_obs_{i}")
+                "Observación:", 
+                value=st.session_state['hallazgos_widgets_list'][i]['observacion'], 
+                key=f"h_obs_{i}"
+            )
             
             st.session_state['hallazgos_widgets_list'][i]['situacion'] = st.text_area(
-                "Situación:", value=finding['situacion'], key=f"h_sit_{i}")
+                "Situación:", 
+                value=st.session_state['hallazgos_widgets_list'][i]['situacion'], 
+                key=f"h_sit_{i}"
+            )
             
-            st.session_state['hallazgos_widgets_list'][i]['autoridad'] = st.text_input(
-                "Autoridad:", value=finding['autoridad'], key=f"h_aut_{i}")
-            
-            st.session_state['hallazgos_widgets_list'][i]['riesgo'] = st.text_area(
-                "Riesgo:", value=finding['riesgo'], key=f"h_rie_{i}")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.session_state['hallazgos_widgets_list'][i]['autoridad'] = st.text_input(
+                    "Autoridad:", 
+                    value=st.session_state['hallazgos_widgets_list'][i]['autoridad'], 
+                    key=f"h_aut_{i}"
+                )
+            with col2:
+                st.session_state['hallazgos_widgets_list'][i]['riesgo'] = st.text_area(
+                    "Riesgo:", 
+                    value=st.session_state['hallazgos_widgets_list'][i]['riesgo'], 
+                    key=f"h_rie_{i}"
+                )
             
             st.session_state['hallazgos_widgets_list'][i]['recomendacion'] = st.text_area(
-                "Recomendación:", value=finding['recomendacion'], key=f"h_rec_{i}")
+                "Recomendación:", 
+                value=st.session_state['hallazgos_widgets_list'][i]['recomendacion'], 
+                key=f"h_rec_{i}"
+            )
 
-            if st.button(f"🗑️ Eliminar Hallazgo #{i+1}", key=f"del_{i}"):
+            if st.button(f"🗑️ Quitar Hallazgo {i+1}", key=f"del_h_{i}"):
                 st.session_state['hallazgos_widgets_list'].pop(i)
                 st.rerun()
 
-    st.divider()
-    if st.button("➕ Añadir Nuevo Hallazgo"):
+    if st.button("➕ Añadir Hallazgo Nuevo"):
         st.session_state['hallazgos_widgets_list'].append({
-            'observacion': '', 'situacion': '', 'autoridad': '', 
-            'riesgo': '', 'recomendacion': ''
+            'observacion': '', 'situacion': '', 'autoridad': '', 'riesgo': '', 'recomendacion': ''
         })
         st.rerun()
 
