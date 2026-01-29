@@ -727,18 +727,16 @@ with tabs[5]:
 with tabs[6]:
     st.header("🔍 Hallazgos de Campo")
 
-    # Función mejorada para aplicar el preset
+    # Función para aplicar el preset y "limpiar" los widgets
     def aplicar_preset_hallazgo(idx):
         clave_preset = f"hallazgo_preset_{idx}"
         seleccion = st.session_state.get(clave_preset)
         
         if seleccion and seleccion != "Autocompletar (Seleccione)...":
-            # Extraemos los datos del diccionario global
             for cat, items in HALLAZGOS_PREDEFINIDOS.items():
                 for item in items:
-                    # Buscamos coincidencia
                     if item['observacion'] in seleccion:
-                        # ACTUALIZAMOS EL ESTADO DE SESIÓN
+                        # 1. Actualizamos los datos
                         st.session_state['hallazgos_widgets_list'][idx].update({
                             'observacion': item['observacion'],
                             'situacion': item['situacion'],
@@ -746,15 +744,19 @@ with tabs[6]:
                             'riesgo': item['riesgo'],
                             'recomendacion': item['recomendacion']
                         })
-                        return # Salimos de la función una vez encontrado
+                        # 2. CAMBIAMOS LA VERSIÓN PARA FORZAR RE-RENDER
+                        v_key = f"version_{idx}"
+                        st.session_state[v_key] = st.session_state.get(v_key, 0) + 1
+                        return
 
-    # Dibujamos los hallazgos
     for i in range(len(st.session_state['hallazgos_widgets_list'])):
         finding = st.session_state['hallazgos_widgets_list'][i]
+        # Obtenemos la versión actual del widget para este hallazgo
+        ver = st.session_state.get(f"version_{i}", 0)
         
-        with st.expander(f"📌 Hallazgo # {i+1}: {finding['observacion'][:40]}...", expanded=True):
+        with st.expander(f"📌 Hallazgo # {i+1}", expanded=True):
             
-            # 1. El Selector (Preset)
+            # Selector de Preset
             opciones_preset = ["Autocompletar (Seleccione)..."]
             for cat, lista in HALLAZGOS_PREDEFINIDOS.items():
                 for h in lista:
@@ -764,47 +766,30 @@ with tabs[6]:
                 "Seleccionar un modelo predefinido:",
                 options=opciones_preset,
                 key=f"hallazgo_preset_{i}",
-                on_change=aplicar_preset_hallazgo, # <--- LA MAGIA ESTÁ AQUÍ
+                on_change=aplicar_preset_hallazgo,
                 args=(i,)
             )
 
             st.divider()
 
-            # 2. Los campos de texto (USAMOS VALUE DIRECTO DEL SESSION STATE)
-            # Nota: Agregamos el on_change para que si el usuario escribe a mano, se guarde también
+            # USAMOS EL KEY DINÁMICO: f"h_obs_{i}_{ver}"
+            # Esto "engaña" a Streamlit para que refresque el campo
             st.session_state['hallazgos_widgets_list'][i]['observacion'] = st.text_area(
-                "Observación:", 
-                value=st.session_state['hallazgos_widgets_list'][i]['observacion'], 
-                key=f"h_obs_{i}"
-            )
+                "Observación:", value=finding['observacion'], key=f"h_obs_{i}_{ver}")
             
             st.session_state['hallazgos_widgets_list'][i]['situacion'] = st.text_area(
-                "Situación:", 
-                value=st.session_state['hallazgos_widgets_list'][i]['situacion'], 
-                key=f"h_sit_{i}"
-            )
+                "Situación:", value=finding['situacion'], key=f"h_sit_{i}_{ver}")
             
-            col1, col2 = st.columns(2)
-            with col1:
-                st.session_state['hallazgos_widgets_list'][i]['autoridad'] = st.text_input(
-                    "Autoridad:", 
-                    value=st.session_state['hallazgos_widgets_list'][i]['autoridad'], 
-                    key=f"h_aut_{i}"
-                )
-            with col2:
-                st.session_state['hallazgos_widgets_list'][i]['riesgo'] = st.text_area(
-                    "Riesgo:", 
-                    value=st.session_state['hallazgos_widgets_list'][i]['riesgo'], 
-                    key=f"h_rie_{i}"
-                )
+            st.session_state['hallazgos_widgets_list'][i]['autoridad'] = st.text_input(
+                "Autoridad:", value=finding['autoridad'], key=f"h_aut_{i}_{ver}")
+            
+            st.session_state['hallazgos_widgets_list'][i]['riesgo'] = st.text_area(
+                "Riesgo:", value=finding['riesgo'], key=f"h_rie_{i}_{ver}")
             
             st.session_state['hallazgos_widgets_list'][i]['recomendacion'] = st.text_area(
-                "Recomendación:", 
-                value=st.session_state['hallazgos_widgets_list'][i]['recomendacion'], 
-                key=f"h_rec_{i}"
-            )
+                "Recomendación:", value=finding['recomendacion'], key=f"h_rec_{i}_{ver}")
 
-            if st.button(f"🗑️ Quitar Hallazgo {i+1}", key=f"del_h_{i}"):
+            if st.button(f"🗑️ Quitar Hallazgo {i+1}", key=f"del_btn_{i}"):
                 st.session_state['hallazgos_widgets_list'].pop(i)
                 st.rerun()
 
@@ -813,7 +798,6 @@ with tabs[6]:
             'observacion': '', 'situacion': '', 'autoridad': '', 'riesgo': '', 'recomendacion': ''
         })
         st.rerun()
-
 # --- GENERATE REPORT BUTTON ---
 st.markdown("--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---")
 if st.session_state['uploaded_file'] is None:
