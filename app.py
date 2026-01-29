@@ -317,7 +317,14 @@ MARCADORES_CONDICIONALES = {
 
     }
 }
+# --- INICIALIZACIÓN DEL ESTADO DE SESIÓN ---
+# Esto evita que los datos se borren al interactuar con la app
+if 'hallazgos_widgets_list' not in st.session_state:
+    st.session_state['hallazgos_widgets_list'] = []
 
+# También inicializamos otras variables si no existen (opcional pero recomendado)
+if 'datos_generales' not in st.session_state:
+    st.session_state['datos_generales'] = {}
 # ==========================================
 # 3. FUNCIONES DE PROCESAMIENTO DOCX
 # ==========================================
