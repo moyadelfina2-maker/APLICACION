@@ -1,3 +1,2 @@
 streamlit
 python-docx
-pip install streamlit python-docx
